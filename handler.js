@@ -5,27 +5,6 @@ global.opts = global.opts || {}
 global.opts.self = false
 const isNumber = x => typeof x === 'number' && !isNaN(x)
 const delay = ms => isNumber(ms) && new Promise(resolve => setTimeout(resolve, ms))
-// === WAIT/ERROR helper ===
-const path = require('path')
-
-const WAIT_STK  = path.join(__dirname, 'media', 'sticker', 'wait.webp')
-const ERROR_STK = path.join(__dirname, 'media', 'sticker', 'error.webp')
-
-// handler.js
-async function sendWait(conn, m) {
-}
-// ==== helper: kirim stiker "error" + teks ====
-async function sendError(conn, m, text) {
-  try {
-    if (fs.existsSync(ERROR_STK)) {
-      await conn.sendMessage(m.chat, { sticker: { url: ERROR_STK } }, { quoted: m })
-    }
-  } catch { /* abaikan error baca file */ }
-
-  // selalu kirim teks juga
-  const msg = text || global.eror || 'Terjadi kesalahan, coba lagi nanti.'
-  await m.reply(msg)
-}
 
 module.exports = {
     async handler(chatUpdate) {
@@ -479,7 +458,6 @@ if (opts.swonly && m.chat !== 'status@broadcast') return
 │
 │ 🔁 𝙱𝚎𝚕𝚒 𝚛𝚘𝚕𝚎 𝚙𝚛𝚎𝚖𝚒𝚞𝚖 𝚋𝚒𝚜𝚊 𝚊𝚔𝚜𝚎𝚜 𝚏𝚒𝚝𝚞𝚛 𝙰𝙸 𝚍𝚊𝚗 𝚜𝚎𝚖𝚞𝚊 𝚏𝚒𝚝𝚞𝚛 𝚋𝚎𝚛𝚕𝚘𝚐𝚘 "𝚙"
 │ 👤 𝙰𝚝𝚊𝚞 𝚌𝚘𝚋𝚊 𝚌𝚑𝚊𝚝 .𝚘𝚠𝚗𝚎𝚛 𝚜𝚒𝚊𝚙𝚊 𝚝𝚊𝚞 𝚍𝚒𝚔𝚊𝚜𝚒 𝚕𝚒𝚖𝚒𝚝 𝚐𝚛𝚊𝚝𝚒𝚜
-│ 📝 𝚂𝚌𝚛𝚒𝚙𝚝 𝚒𝚗: ${global.web}
 │ 🎁 𝙺𝚎𝚝𝚒𝚔 .𝚌𝚕𝚊𝚒𝚖 (𝙺𝚊𝚕𝚊𝚞 𝚑𝚊𝚛𝚒 𝚒𝚗𝚒 𝚋𝚎𝚕𝚞𝚖 𝚌𝚕𝚊𝚒𝚖 𝚕𝚒𝚖𝚒𝚝 𝚐𝚛𝚊𝚝𝚒𝚜)
 ╰───────────────────────
 `, m)
@@ -723,9 +701,6 @@ global.dfail = (type, m, conn) => {
         
     restrict: '🚫 *𝙵𝙸𝚃𝚄𝚁 𝙳𝙸𝙼𝙰𝚃𝙸𝙺𝙰𝙽!* 𝙵𝚒𝚝𝚞𝚛 𝚒𝚗𝚒 𝚜𝚎𝚍𝚊𝚗𝚐 𝚍𝚒𝚗𝚘𝚗𝚊𝚔𝚝𝚒𝚏𝚔𝚊𝚗 𝚘𝚕𝚎𝚑 𝚁𝚘𝚘𝚝 𝙾𝚠𝚗𝚎𝚛.'
     }[type]
-
-    if (msg) {
-        return m.reply(msg + '\n\n➤ *𝙳𝚎𝚟𝚎𝚕𝚘𝚙𝚎𝚍 𝚋𝚢 𝙵𝚎𝚋𝚛𝚢𝚆𝚎𝚜𝚔𝚎𝚛*')
     }
 }
 
