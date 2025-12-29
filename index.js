@@ -1,149 +1,148 @@
-const cluster = require('cluster');
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
-const express = require('express');
-const app = express();
+const cluster = require('cluster')
+const { spawn } = require('child_process')
+const path = require('path')
+const fs = require('fs')
+const os = require('os')
+const express = require('express')
+const app = express()
 
-// Express.js 
-const ports = [4000, 3000, 5000, 8000, 8080, 4444];
-let availablePortIndex = 0;
+/* ================= LOGGER ================= */
+
+const log = {
+  info: (msg) => console.log(`[INFO] ${msg}`),
+  warn: (msg) => console.log(`[WARN] ${msg}`),
+  error: (msg) => console.error(`[ERROR] ${msg}`),
+  success: (msg) => console.log(`[SUCCESS] ${msg}`)
+}
+
+/* ================= EXPRESS ================= */
+
+const ports = [4000, 3000, 5000, 8000, 8080, 4444]
+let availablePortIndex = 0
 
 function checkPort(port) {
   return new Promise((resolve, reject) => {
     const server = app.listen(port, () => {
-      server.close();
-      resolve(true);
-    });
-    server.on('error', reject);
-  });
+      server.close()
+      resolve(true)
+    })
+    server.on('error', reject)
+  })
 }
 
 async function startServer() {
-  const port = ports[availablePortIndex];
-  const isPortAvailable = await checkPort(port);
+  const port = ports[availablePortIndex]
 
-  if (isPortAvailable) {
-    console.log('\x1b[33m%s\x1b[0m', `🌐 Port ${port} is open`);
-    app.get('/', (req, res) => {
-      res.setHeader('Content-Type', 'application/json');
-      const data = {
-        status: 'true',
-        message: 'Bot Successfully Activated!',
-        author: 'hitam'
-      };
-      const result = {
-        response: data
-      };
-      res.send(JSON.stringify(result, null, 2));
-    });
-  } else {
-    console.log(`Port ${port} is already in use. Trying another port...`);
-    availablePortIndex++;
+  try {
+    const isAvailable = await checkPort(port)
+    if (isAvailable) {
+      log.success(`Server listening on port ${port}`)
+      app.get('/', (_, res) => {
+        res.json({
+          status: true,
+          message: 'Bot Successfully Activated',
+          author: 'hitam'
+        })
+      })
+    }
+  } catch {
+    log.warn(`Port ${port} in use, trying next`)
+    availablePortIndex++
 
     if (availablePortIndex >= ports.length) {
-      console.log('No more available ports. Exiting...');
-      process.exit(1);
-    } else {
-      ports[availablePortIndex] = parseInt(port) + 1;
-      startServer();
+      log.error('No available ports found')
+      process.exit(1)
     }
+
+    ports[availablePortIndex] = port + 1
+    startServer()
   }
 }
 
-startServer();
+startServer()
 
-let isRunning = false;
+/* ================= BOT PROCESS ================= */
+
+let isRunning = false
 
 function start(file) {
-  if (isRunning) return;
-  isRunning = true;
+  if (isRunning) return
+  isRunning = true
 
-  const args = [path.join(__dirname, file), ...process.argv.slice(2)];
+  const args = [path.join(__dirname, file), ...process.argv.slice(2)]
   const p = spawn(process.argv[0], args, {
-    stdio: ["inherit", "inherit", "inherit", "ipc"],
-  });
+    stdio: ['inherit', 'inherit', 'inherit', 'ipc']
+  })
 
-  p.on("message", (data) => {
-    console.log('\x1b[36m%s\x1b[0m', `🟢 RECEIVED ${data}`);
-    switch (data) {
-      case "reset":
-        p.kill();
-        isRunning = false;
-        start.apply(this, arguments);
-        break;
-      case "uptime":
-        p.send(process.uptime());
-        break;
+  p.on('message', (data) => {
+    log.info(`Child message: ${data}`)
+    if (data === 'reset') {
+      log.warn('Restart signal received')
+      p.kill()
+      isRunning = false
+      start(file)
+    } else if (data === 'uptime') {
+      p.send(process.uptime())
     }
-  });
+  })
 
-  p.on("exit", (code) => {
-    isRunning = false;
-    console.error('\x1b[31m%s\x1b[0m', `Exited with code: ${code}`);
-    start('main.js');
+  p.on('exit', (code) => {
+    isRunning = false
+    log.error(`Process exited with code ${code}`)
+    if (code !== 0) start('main.js')
+  })
 
-    if (code === 0) return;
+  p.on('error', (err) => {
+    log.error(`Spawn error: ${err.message}`)
+    p.kill()
+    isRunning = false
+    start('main.js')
+  })
 
-    fs.watchFile(args[0], () => {
-      fs.unwatchFile(args[0]);
-	  console.error('\x1b[31m%s\x1b[0m', `File ${args[0]} has been modified. Script will restart...`);
-      start("main.js");
-    });
-  });
+  /* ================= PLUGINS ================= */
 
-  p.on("error", (err) => {
-    console.error('\x1b[31m%s\x1b[0m', `Error: ${err}`);
-    p.kill();
-    isRunning = false;
-    console.error('\x1b[31m%s\x1b[0m', `Error occurred. Script will restart...`);
-    start("main.js");
-  });
-
-  const pluginsFolder = path.join(__dirname, "plugins");
-
+  const pluginsFolder = path.join(__dirname, 'plugins')
   fs.readdir(pluginsFolder, (err, files) => {
-    if (err) {
-      console.error('\x1b[31m%s\x1b[0m', `Error reading plugins folder: ${err}`);
-      return;
-    }
-    console.log('\x1b[33m%s\x1b[0m', `🟡 Found ${files.length} plugins in folder ${pluginsFolder}`);
+    if (err) return log.error(`Failed to read plugins: ${err.message}`)
+    log.info(`Loaded ${files.length} plugins`)
+
     try {
-      require.resolve('@adiwajshing/baileys');
-      console.log('\x1b[33m%s\x1b[0m', `🟡 Baileys library version ${require('@adiwajshing/baileys/package.json').version} is installed`);
-    } catch (e) {
-      console.error('\x1b[31m%s\x1b[0m', `❌ Baileys library is not installed`);
+      const baileys = require('@adiwajshing/baileys/package.json')
+      log.info(`Baileys version ${baileys.version}`)
+    } catch {
+      log.warn('Baileys not installed')
     }
-  });
+  })
 
-  console.log(`🖥️ \x1b[33m${os.type()}\x1b[0m, \x1b[33m${os.release()}\x1b[0m - \x1b[33m${os.arch()}\x1b[0m`);
-  const ramInGB = os.totalmem() / (1024 * 1024 * 1024);
-  console.log(`💾 \x1b[33mTotal RAM: ${ramInGB.toFixed(2)} GB\x1b[0m`);
-  const freeRamInGB = os.freemem() / (1024 * 1024 * 1024);
-  console.log(`💽 \x1b[33mFree RAM: ${freeRamInGB.toFixed(2)} GB\x1b[0m`);
-  console.log('\x1b[33m%s\x1b[0m', `📃 Script by trio hitam`);
-  console.log('\x1b[33m%s\x1b[0m', `🔗 Github: https://github.com/PteroxOS/bot-wa`);	
+  /* ================= SYSTEM INFO ================= */
 
-  setInterval(() => {}, 1000);
+  log.info(`OS: ${os.type()} ${os.release()} (${os.arch()})`)
+  log.info(`Total RAM: ${(os.totalmem() / 1e9).toFixed(2)} GB`)
+  log.info(`Free RAM: ${(os.freemem() / 1e9).toFixed(2)} GB`)
+  log.info('Script by trio hitam')
+  log.info('Github: https://github.com/PteroxOS/bot-wa')
+
+  setInterval(() => {}, 1000)
 }
 
-start("main.js");
+start('main.js')
 
-const tmpDir = './tmp';
-  if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir);
-    console.log('\x1b[33m%s\x1b[0m', `📁 Created directory ${tmpDir}`);
+/* ================= TMP DIR ================= */
+
+const tmpDir = './tmp'
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir)
+  log.info(`Directory created: ${tmpDir}`)
 }
+
+/* ================= GLOBAL ERRORS ================= */
 
 process.on('unhandledRejection', (reason) => {
-  console.error('\x1b[31m%s\x1b[0m', `Unhandled promise rejection: ${reason}`);
-  console.error('\x1b[31m%s\x1b[0m', 'Unhandled promise rejection. Script will restart...');
-  start('main.js');
-});
+  log.error(`Unhandled rejection: ${reason}`)
+  start('main.js')
+})
 
 process.on('exit', (code) => {
-  console.error(`Exited with code: ${code}`);
-  console.error('Script will restart...');
-  start('main.js');
-});
+  log.error(`Process exited (${code}), restarting`)
+  start('main.js')
+})
