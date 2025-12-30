@@ -1,6 +1,6 @@
-global.owner = [628]
-global.mods  = [628]
-global.prems = [628]
+global.owner = ['628']
+global.mods  = ['628']
+global.prems = ['628']
 
 global.nameowner = 'Hitam'
 global.numberowner = '628'
