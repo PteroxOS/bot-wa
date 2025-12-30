@@ -2,9 +2,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
 
 (async () => {
   require('./config');
-  const logger = require('./lib/logger')
-  logger.banner()
-  logger.systemInfo()
+  
   
   const {
     useMultiFileAuthState,
