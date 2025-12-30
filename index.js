@@ -14,7 +14,9 @@ const log = {
   error: (msg) => console.error(`[ERROR] ${msg}`),
   success: (msg) => console.log(`[SUCCESS] ${msg}`)
 }
-
+const logger = require('./lib/logger')
+  logger.banner()
+  logger.systemInfo()
 /* ================= EXPRESS ================= */
 
 const ports = [4000, 3000, 5000, 8000, 8080, 4444]
