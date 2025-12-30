@@ -30,7 +30,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
   const syntaxError = require('syntax-error')
   const chalk = require('chalk')
   const readline = require('readline')
-
+  const logger = require('./lib/logger')
   let simple = require('./lib/simple')
 
   // ===============================
