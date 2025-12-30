@@ -725,7 +725,7 @@ global.dfail = (type, m, conn) => {
     }[type]
 
     if (msg) {
-        return m.reply(msg + '\n\n➤ *𝙳𝚎𝚟𝚎𝚕𝚘𝚙𝚎𝚍 𝚋𝚢 𝙵𝚎𝚋𝚛𝚢𝚆𝚎𝚜𝚔𝚎𝚛*')
+        return m.reply(msg + '\n\n➤ *©Hitam*')
     }
 }
 
