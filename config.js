@@ -1,21 +1,20 @@
-global.owner = []
-global.mods  = []
-global.prems = []
+global.owner = [628]
+global.mods  = [628]
+global.prems = [628]
 
-global.nameowner = ''
-global.numberowner = ''
-global.mail = ''
-global.web = ''
-global.gc = ''
-global.instagram = ''
+global.nameowner = 'Hitam'
+global.numberowner = '628'
+global.mail = 'dev.id'
+global.web = 'dev.id'
+global.gc = 'https'
+global.instagram = 'hitam'
 
-global.wm = ''
-global.wait = ''
-global.eror = ''
-global.stiker_wait = ''
+global.wm = 'Bot-WA'
+global.wait = 'Please wait a moment..'
+global.stiker_wait = 'sticker is being created, wait a moment'
 
-global.packname = ''
-global.author = ''
+global.packname = 'Bot-WA'
+global.author = 'Hitam'
 
 global.maxwarn = 5
 global.autobio = false
